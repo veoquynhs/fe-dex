@@ -1,9 +1,6 @@
-import Head from "next/head"
-import Image from "next/image"
 import styles from "../styles/Home.module.css"
 import { Form, useNotification, Button } from "web3uikit"
 import { useMoralis, useWeb3Contract } from "react-moralis"
-import { ethers } from "ethers"
 import dexAbi from "../constants/DEX.json"
 import networkMapping from "../constants/networkMapping.json"
 import { useEffect, useState } from "react"
@@ -33,7 +30,14 @@ export default function Home() {
         await runContractFunction({
             params: removeLiquidityOptions,
             onSuccess: (tx) => handleRemoveLiquiditySuccess(tx),
-            onError: (error) => console.log(error),
+            onError: (error) => {
+                dispatch({
+                    type: "error",
+                    title: "❌ Oops!",
+                    message: "Error removing liquidity: " + error.message,
+                    position: "topR",
+                })
+            },
         })
     }
 
@@ -41,10 +45,11 @@ export default function Home() {
         await tx.wait(1)
         dispatch({
             type: "success",
-            message: "Liquidity Removing",
-            title: "Liquidity Removed",
+            title: "✅ Removed liquidity successfully!",
+            message: "Tx Hash: " + tx.hash,
             position: "topR",
         })
+        console.log(tx)
     }
 
     async function setupUI() {
@@ -52,10 +57,8 @@ export default function Home() {
             params: {
                 abi: dexAbi,
                 contractAddress: dexAddress,
-                functionName: "getProceeds",
-                params: {
-                    address: account,
-                },
+                functionName: "sharesOf",
+                params: { "": account },
             },
             onError: (error) => console.log(error),
         })
@@ -69,23 +72,32 @@ export default function Home() {
     }, [shares, account, isWeb3Enabled, chainId])
 
     return (
-        <div className={styles.container}>
-            <div className="mb-4">
-                Your current shares is <span class="font-bold">{shares}</span>
+        <div className={`container mx-auto ${styles.main}`}>
+            <div className={`flex flex-wrap ${styles.grid}`}>
+                {isWeb3Enabled && chainId ? (
+                    <div className={styles.card}>
+                        <Form
+                            onSubmit={removeLiquidity}
+                            data={[
+                                {
+                                    name: "Shares",
+                                    type: "number",
+                                    value: "",
+                                    label: "Enter the shares",
+                                    key: "shares",
+                                },
+                            ]}
+                            title="Burn your shares to earn profit!"
+                            id="Main Form"
+                        />
+                        <div className={styles.shareInfo}>
+                            Your current shares is <span className="font-bold">{shares}</span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className={styles.card}>Web3 Currently Not Enabled</div>
+                )}
             </div>
-            <Form
-                onSubmit={removeLiquidity}
-                data={[
-                    {
-                        name: "Shares",
-                        type: "number",
-                        value: "",
-                        key: "shares",
-                    },
-                ]}
-                title="Burn your shares to earn profit!"
-                id="Main Form"
-            />
         </div>
     )
 }

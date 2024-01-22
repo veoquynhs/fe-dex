@@ -1,0 +1,15 @@
+/* Header.module.css */
+
+.header {
+    background-color: #0e1726; /* Teal/Blue background color similar to Uniswap */
+}
+
+.navLink {
+    color: #b8c7e0; /* Lighter text color */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navLink:hover {
+    color: #ffffff; /* White text color on hover */
+}
